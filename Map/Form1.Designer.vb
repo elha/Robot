@@ -22,28 +22,33 @@ Partial Class Form1
     'Do not modify it using the code editor.
     <System.Diagnostics.DebuggerStepThrough()> _
     Private Sub InitializeComponent()
-        Me.Panel1 = New System.Windows.Forms.Panel()
+        Me.pictureBox1 = New System.Windows.Forms.PictureBox()
+        CType(Me.pictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
-        'Panel1
+        'pictureBox1
         '
-        Me.Panel1.BackColor = System.Drawing.SystemColors.ControlDark
-        Me.Panel1.Location = New System.Drawing.Point(12, 12)
-        Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(676, 554)
-        Me.Panel1.TabIndex = 0
+        Me.pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None
+        Me.pictureBox1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle
+        Me.pictureBox1.Location = New System.Drawing.Point(0, 0)
+        Me.pictureBox1.Margin = New System.Windows.Forms.Padding(4, 5, 4, 5)
+        Me.pictureBox1.Name = "pictureBox1"
+        Me.pictureBox1.Size = New System.Drawing.Size(500, 500)
+        Me.pictureBox1.TabIndex = 2
+        Me.pictureBox1.TabStop = False
         '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(978, 578)
-        Me.Controls.Add(Me.Panel1)
+        Me.Controls.Add(Me.pictureBox1)
         Me.Name = "Form1"
         Me.Text = "Form1"
+        CType(Me.pictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
 
-    Friend WithEvents Panel1 As Panel
+    Friend WithEvents pictureBox1 As PictureBox
 End Class

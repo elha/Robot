@@ -6,8 +6,9 @@
         Wall = 16
     End Enum
 
-    Public Shared BorderPen As Brush = Brushes.IndianRed
+    Public Shared WallPen As Brush = Brushes.IndianRed
     Public Shared LawnPen As Brush = Brushes.LawnGreen
+    Public Shared BorderPen As Pen = Pens.LightGray
 
     Public Structure Node
         Public Size As Integer
@@ -20,10 +21,12 @@
                 Case enState.SubNodes
                     Array.ForEach(SubNodes, Sub(s) s.Draw(g))
                 Case enState.Wall
-                    g.FillRectangle(BorderPen, Area)
+                    g.FillRectangle(WallPen, Area)
                 Case enState.Green
                     g.FillRectangle(LawnPen, Area)
+                Case Else
             End Select
+            If Size > 1 Then g.DrawRectangle(BorderPen, Area)
         End Sub
 
         Public Function Area() As Rectangle
@@ -36,10 +39,11 @@
                 'SetValue, if subnodes than there as well
                 If SubNodes IsNot Nothing Then
                     For Each s In SubNodes
-                        s.SetPoint(pLoc, pValue, nRasterSize)
+                        If nRasterSize = 1 OrElse s.Value = enState.Undefined OrElse s.Value = enState.SubNodes Then s.SetPoint(pLoc, pValue, nRasterSize)
                     Next
+                Else
+                    Value = pValue
                 End If
-                Value = pValue
             Else
                 Dim hSize = Size >> 1
                 ' 0 1 
