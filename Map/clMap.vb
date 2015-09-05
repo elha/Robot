@@ -14,6 +14,7 @@
         Public Size As Integer
         Public Location As Point
         Public Value As enState
+
         Public SubNodes() As Node
 
         Public Sub Draw(g As Graphics)
@@ -33,23 +34,40 @@
             Return New Rectangle(Location, New Size(Size, Size))
         End Function
 
-        Public Sub SetPoint(pLoc As Point, pValue As enState, nRasterSize As Integer)
+        ''' <summary>
+        ''' SetPoint @pLoc to Value
+        ''' uses nRasterSize for Speed
+        ''' e.g. green, Raster 16 = do not create subnodes if not really needed
+        ''' but keep subnodes if existant
+        ''' </summary>
+        ''' <param name="pLoc"></param>
+        ''' <param name="pValue"></param>
+        ''' <param name="nTargetRasterSize"></param>
+        Public Sub SetPoint(pLoc As Point, pValue As enState, nTargetRasterSize As Integer)
+            'Node already has Value = done
             If Value = pValue Then SubNodes = Nothing : Return
-            If Size <= nRasterSize Then
-                'SetValue, if subnodes than there as well
+
+            If Size <= nTargetRasterSize Then
+                'Targetrastersize reached: SetValue
                 If SubNodes IsNot Nothing Then
-                    For Each s In SubNodes
-                        If nRasterSize = 1 OrElse s.Value = enState.Undefined OrElse s.Value = enState.SubNodes Then s.SetPoint(pLoc, pValue, nRasterSize)
+                    'If Subnodes: set Subnodes (undefined, subnodes)
+                    For i = 0 To 3
+                        SubNodes(i).SetPoint(pLoc, pValue, nTargetRasterSize)
                     Next
-                Else
+                ElseIf nTargetRasterSize = 1 Then
+                    'always overwrite if TargetRasterSize = 1 
+                    Value = pValue
+                ElseIf Value <> enState.Wall Then
+                    'keep Wall-Status, overwrite everything else
                     Value = pValue
                 End If
             Else
+                'need to write smaller Node
                 Dim hSize = Size >> 1
                 ' 0 1 
                 ' 2 3
-                'create Nodes if needed
                 If SubNodes Is Nothing Then
+                    'create Nodes if needed
                     SubNodes = {
                                 New Node With {.Value = Value, .Size = hSize, .Location = Location},
                                 New Node With {.Value = Value, .Size = hSize, .Location = New Point(Location.X + hSize, Location.Y)},
@@ -60,11 +78,11 @@
                 End If
 
                 'SetPoint within Subnode
-                SubNodes(If(pLoc.X > Location.X + hSize, 1, 0) + If(pLoc.Y > Location.Y + hSize, 2, 0)).SetPoint(pLoc, pValue, nRasterSize)
+                SubNodes(If(pLoc.X > Location.X + hSize, 1, 0) + If(pLoc.Y > Location.Y + hSize, 2, 0)).SetPoint(pLoc, pValue, nTargetRasterSize)
             End If
 
-            'clear Nodes if possible
             If SubNodes IsNot Nothing Then
+                'clear Nodes if possible
                 Dim nValue = SubNodes(0).Value
                 If nValue <> enState.SubNodes AndAlso
                         nValue = SubNodes(1).Value AndAlso
@@ -82,7 +100,7 @@
         MainNode.Draw(g)
     End Sub
 
-    Public Sub SetPoint(pLoc As Point, pValue As enState, Optional nRasterSize As Integer = 2)
+    Public Sub SetPoint(pLoc As Point, pValue As enState, Optional nRasterSize As Integer = 1)
         'scale out if needed
         While Not MainNode.Area.Contains(pLoc)
             Dim SubNode = MainNode

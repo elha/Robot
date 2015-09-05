@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6F7EACA5-9FE7-44F9-A662-70F404C758EF}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <StartupObject>Map.My.MyApplication</StartupObject>
+    <StartupObject>Map.Main</StartupObject>
     <RootNamespace>Map</RootNamespace>
     <AssemblyName>Map</AssemblyName>
     <FileAlignment>512</FileAlignment>

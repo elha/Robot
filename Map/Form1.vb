@@ -2,6 +2,7 @@
     Dim oMap As New clMap
 
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles Me.Load
+        'oMap.SetPoint(New Point(1, 1), clMap.enState.Wall)
 
         For i = 0 To 80
             oMap.SetPoint(New Point(r.Next(0, 500), r.Next(0, 500)), clMap.enState.Wall)
@@ -21,9 +22,8 @@
     Dim r As New Random(23)
 
     Private Sub Form1_Click(sender As Object, e As EventArgs) Handles Me.Click
-        For i = 0 To 80
-            'oMap.SetPoint(New Point(r.Next(0, 500), r.Next(0, 500)), clMap.enState.Wall)
-        Next
+        'oMap.SetPoint(New Point(120, 120), clMap.enState.Green, 128)
+
         oMap.SetPoly({New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500)), New Point(r.Next(0, 500), r.Next(0, 500))}, clMap.enState.Green)
         Draw()
     End Sub

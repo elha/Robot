@@ -1,21 +1,7 @@
 ﻿Imports Map
 
 Public Class clMap
-    Public Class clObstacle
-        Implements IQuadObject
-        Public x As Integer
-        Public y As Integer
 
-        Public ReadOnly Property Bounds As Rectangle Implements IQuadObject.Bounds
-            Get
-                Return New Rectangle(x, y, 1, 1)
-            End Get
-        End Property
-
-        Public Event BoundsChanged As EventHandler Implements IQuadObject.BoundsChanged
-    End Class
-
-    Public QTree As New QuadTree(Of clObstacle)(New Size(1, 1), 16)
     Public Event MapChanged()
 
     Public Obstacle As New List(Of Point)
