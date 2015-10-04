@@ -6,6 +6,8 @@ Imports Map
 Public Class clRGBDCam
     Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (ByVal pDst As IntPtr, ByVal pSrc As IntPtr, ByVal ByteLen As Long)
 
+    Public Event FrameResult(polyLineOfSight() As Point, arrObstacles() As Point)
+
     Dim mDepthStream As VideoStream
     Dim mMap As clMap
 
@@ -60,7 +62,7 @@ Public Class clRGBDCam
         mMap = oMap
     End Sub
 
-    Public Sub Cancel()
+    Public Sub Close()
         OpenNI.Shutdown()
     End Sub
 
@@ -93,17 +95,19 @@ Public Class clRGBDCam
     End Sub
 
     Private Function ConvertToWorld(x As Integer, y As Integer, depthz As UInt16) As Double()
-        Dim orig As Double() = {(x / xSize - 0.5F) * depthz * xzFactor / 10,
-                                      (0.5F - y / ySize) * depthz * yzFactor / -10,
-                                      depthz / 10}
-        Dim result = Me.Rotate(orig)
+		Dim orig As Double() = {-(x / xSize - 0.5F) * depthz * xzFactor / 10,
+									  (0.5F - y / ySize) * depthz * yzFactor / -10,
+									  depthz / 10}
+		Dim result = Me.Rotate(orig)
         result(1) = result(1) + sensorHeight
         Return result
     End Function
 
     Private Sub FindLineOfSight(depthFrame As VideoFrameRef)
         CopyData(depthFrame.Data, depthFrame.DataSize, Buffer)
-        mMap.Clear()
+        Dim arrLineOfSight As New List(Of Point)
+		arrLineOfSight.AddRange({New Point(-30, 0), New Point(-30, -15), New Point(30, -15), New Point(30, 0)})
+		Dim arrObstacles As New List(Of Point)
 
         For x = 3 To xSize - 3 Step 5
             Dim arrIncline(4) As Double
@@ -116,37 +120,37 @@ Public Class clRGBDCam
             While y < ySize
                 Dim nCur = Median3(Buffer(y, x - 1), Buffer(y, x), Buffer(y, x + 1))
                 If nCur > 0 Then
-                    Dim Point = ConvertToWorld(x, y, nCur)
-                    If pLast IsNot Nothing Then
-                        arrIncline(n Mod 5) = Point(1) - pLast(1)
-                        arrLength(n Mod 5) = Point(2) - pLast(2)
-                        n += 1
-                        Dim nIncline = arrIncline(0) + arrIncline(1) + arrIncline(2) + arrIncline(3) + arrIncline(4)
-                        Dim nLength = arrLength(0) + arrLength(1) + arrLength(2) + arrLength(3) + arrLength(4)
+					Dim Point = ConvertToWorld(x, y, nCur)
+					If Point(2) > 600 AndAlso pLast IsNot Nothing Then
+						arrIncline(n Mod 5) = Point(1) - pLast(1)
+						arrLength(n Mod 5) = Point(2) - pLast(2)
+						n += 1
+						Dim nIncline = arrIncline(0) + arrIncline(1) + arrIncline(2) + arrIncline(3) + arrIncline(4)
+						Dim nLength = arrLength(0) + arrLength(1) + arrLength(2) + arrLength(3) + arrLength(4)
 
-                        If pObstacle IsNot Nothing Then
+						If pObstacle IsNot Nothing Then
                             'Hindernis: grob nach oben scannen ob noch näher
                             If pObstacle(2) > Point(2) Then pObstacle = Point
-                            y += 4
-                        ElseIf Math.Abs(nIncline) > nMaxIncline OrElse nLength < 0 Then
-                            'Steigung > 3cm oder Objekt überhalb des Bodens
-                            pObstacle = pLast
-                        ElseIf nLength > 600
+							y += 4
+						ElseIf Math.Abs(nIncline) > nMaxIncline OrElse nLength < 0 Then
+							'Steigung > 3cm oder Objekt überhalb des Bodens
+							pObstacle = pLast
+						ElseIf nLength > 600
                             'wenn die Punkte zu weit auseinenander liegen dann wirds ungenau
                             Exit While
-                        Else
+						Else
                             'so weit sieht man
                             pLineOfSight = Point
-                        End If
-                    End If
-                    pLast = Point
+						End If
+					End If
+					pLast = Point
                 End If
                 y += 1
             End While
-            If pLineOfSight IsNot Nothing Then mMap.SetPath(New Point(pLineOfSight(0) / 10, pLineOfSight(2) / 10))
-            If pObstacle IsNot Nothing Then mMap.SetObstacle(New Point(pObstacle(0) / 10, pObstacle(2) / 10))
+            If pLineOfSight IsNot Nothing Then arrLineOfSight.Add(New Point(pLineOfSight(0) / 10, pLineOfSight(2) / 10))
+            If pObstacle IsNot Nothing Then arrObstacles.add(New Point(pObstacle(0) / 10, pObstacle(2) / 10))
         Next
-        mMap.UpdateUI()
+        RaiseEvent FrameResult(arrLineOfSight.ToArray, arrObstacles.ToArray)
     End Sub
 
     Public Function Rotate(vector As Double()) As Double()

@@ -6,10 +6,10 @@ Public Class clHardware
     Public Event Message(strMsg)
 
     Dim WithEvents oSerial As SerialPort
-    Public RobotPos As New PointF(0, 0)
-    Public Heading As Decimal = 0
-
-    Dim oReader = New System.Threading.Thread(Sub()
+	Public RobotPos As New Point(0, 0)
+	Public Heading As Decimal = 0
+	Public BodySize As Point() = {New Point(-30, -5), New Point(-10, 30), New Point(10, 30), New Point(30, -5)}
+	Dim oReader = New System.Threading.Thread(Sub()
                                                   While True
                                                       Try
                                                           ParseData(oSerial.ReadLine)
@@ -31,17 +31,15 @@ Public Class clHardware
 
         Select Case arrData(0)
             Case "o"
-                RobotPos.X = Double.Parse(arrData(1))
-                RobotPos.Y = Double.Parse(arrData(2))
-                Heading = Double.Parse(arrData(4))
+				RobotPos.X = Double.Parse(arrData(1)) * 100
+				RobotPos.Y = Double.Parse(arrData(2)) * 100
+				Heading = Double.Parse(arrData(4))
                 RaiseEvent PositionChanged()
 
             Case "InitializeDriveGeometry"
-                SendCommand("DriveGeometry", -3, 250, -3, 505, 588 * 2)
-            ' 2,15,2,15,7
-            ' 
+                SendCommand("DriveGeometry", -3, 220, -3, 460, 588 * 2)
             Case "InitializeSpeedController"
-                SendCommand("SpeedControllerParams", 0, 2, 0, 4, 0, 2, 0, 4, 0, 1)
+                SendCommand("SpeedControllerParams", -1, 3, 0, 2, -1, 3, 0, 2, 0, 1)
             Case "InitializeBatteryMonitor"
                 SendCommand("BatteryMonitorParams", -1, 1)
             Case Else
