@@ -1,13 +1,14 @@
 ﻿Public Class clMap
-    Public Enum enState
-        SubNodes = -100
-        OffSite = -1
-        Undefined = 0
-        Green = 2
-        Worked = 3
-        Wall = 16
-        Fence = 100
-    End Enum
+	Public Enum enState
+		SubNodes = -100
+		OffSite = -1
+		Undefined = 0
+		Green = 2
+		Worked = 3
+		Wall = 16
+		Fence = 100
+	End Enum
+	Private Const nMaxFails As Integer = 5
 	Public lock As Object = Me
 	Public Shared OffSitePen As Brush = Brushes.LightSalmon
     Public Shared FencePen As Brush = Brushes.Black
@@ -32,10 +33,26 @@
 
     Public Structure Node
         Public Size As Integer
-        Public Location As Point
-        Public Value As enState
-
-        Public SubNodes() As Node
+		Public Location As Point
+		Private mnValue As enState
+		Public Property Value As enState
+			Get
+				Return mnValue
+			End Get
+			Set(value As enState)
+				If Worked AndAlso value = enState.Green Then value = enState.Worked
+				If mnValue = enState.Wall AndAlso value < mnValue Then
+					Fails += 1
+					If Fails < nMaxFails Then Return
+				End If
+				If Not Worked AndAlso value = enState.Worked Then Worked = True
+				mnValue = value
+				Fails = 0
+			End Set
+		End Property
+		Public Fails As Integer
+		Public Worked As Boolean
+		Public SubNodes() As Node
 
         Public Sub Draw(g As Graphics, stat As clStats)
             stat.Count += 1
@@ -48,12 +65,14 @@
                     g.FillRectangle(WallPen, Area)
                 Case enState.Fence
                     g.FillRectangle(FencePen, Area)
-                Case enState.Green
-                    g.FillRectangle(LawnPen, Area)
-                Case enState.Worked
-                    g.FillRectangle(WorkPen, Area)
-                Case Else
-            End Select
+				Case enState.Green, enState.Worked
+					If Worked Then
+						g.FillRectangle(WorkPen, Area)
+					Else
+						g.FillRectangle(LawnPen, Area)
+					End If
+				Case Else
+			End Select
             If SubNodes Is Nothing Then stat.Area(Value) += Size * Size
             'If Size > 1 Then g.DrawRectangle(BorderPen, Area)
         End Sub
@@ -80,16 +99,12 @@
                 If SubNodes IsNot Nothing Then
                     'If Subnodes: set Subnodes (undefined, subnodes)
                     For i = 0 To 3
-                        SubNodes(i).SetPoint(pLoc, pValue, nTargetRasterSize)
-                    Next
-                ElseIf nTargetRasterSize = 1 Then
-                    'always overwrite if TargetRasterSize = 1 
-                    Value = pValue
-                ElseIf Value < pValue Then
-                    'keep Wall-Status, overwrite everything else
-                    Value = pValue
-                End If
-            Else
+						SubNodes(i).SetPoint(pLoc, pValue, nTargetRasterSize)
+					Next
+				Else
+					Value = pValue
+				End If
+			Else
                 'need to write smaller Node
                 Dim hSize = Size >> 1
                 ' 0 1 

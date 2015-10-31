@@ -9,9 +9,8 @@ Public Class clRGBDCam
     Public Event FrameResult(polyLineOfSight() As Point, arrObstacles() As Point)
 
     Dim mDepthStream As VideoStream
-    Dim mMap As clMap
 
-    Dim xSize As Integer = 320
+	Dim xSize As Integer = 320
     Dim ySize As Integer = 240
 
     Dim ProcessNthFrame As Integer = 30
@@ -51,18 +50,16 @@ Public Class clRGBDCam
         device.DepthColorSyncEnabled = False
     End Sub
 
-    Friend Sub Start(oMap As clMap)
-        If mDepthStream.IsValid Then
-            If Not HandleError(mDepthStream.Start()) Then
-                Throw New Exception("could not start RGBD Stream")
-            End If
-            AddHandler mDepthStream.OnNewFrame, AddressOf ProcessFrame
-        End If
+	Friend Sub Start(oMap As clMap)
+		If mDepthStream.IsValid Then
+			If Not HandleError(mDepthStream.Start()) Then
+				Throw New Exception("could not start RGBD Stream")
+			End If
+			AddHandler mDepthStream.OnNewFrame, AddressOf ProcessFrame
+		End If
+	End Sub
 
-        mMap = oMap
-    End Sub
-
-    Public Sub Close()
+	Public Sub Close()
         OpenNI.Shutdown()
     End Sub
 

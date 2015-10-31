@@ -27,94 +27,74 @@
 
     Dim ran As New Random(Now.Millisecond)
 
-    Dim nMaxSpeed = 50 'cm/s
+	Dim nMaxSpeed = 80 'cm/s
 
     Public Function RandomMow(pStart As Point, nHeading As Double) As IEnumerable(Of clWayPoint)
         Dim out As New Generic.List(Of clWayPoint)
         Dim pWall = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-30, 0), New Point(-50, 60), New Point(50, 60), New Point(30, 0)}), {clMap.enState.Fence, clMap.enState.Wall})
-        If pWall.X < Integer.MaxValue Then
-            Dim nAngleWall = Heading(pStart, pWall)
-            WallPoint = pWall
+		If pWall.X < Integer.MaxValue Then
+			Dim nAngleWall = Heading(pStart, pWall)
+			WallPoint = pWall
             'Head 60, WallNormal 90, Reflect 120+180
             '180 + 180 -60 = 300
             nHeading = Math.PI + 2 * nAngleWall - nHeading + (ran.NextDouble() - 0.5) * 0.2
-            out.Add(New clWayPoint() With {.Point = pStart, .Heading = nHeading})
-        Else
-            Dim pNext = Translate(New Point(0, 0), nHeading, {New Point(0, nMaxSpeed)})(0)
-            pNext.Offset(pStart)
-            out.Add(New clWayPoint() With {.Point = pNext, .Heading = nHeading})
-        End If
-        Return out
-    End Function
+		End If
 
-    Public Function FastMow(pStart As Point, nHeading As Double) As IEnumerable(Of clWayPoint)
-        Dim out As New Generic.List(Of clWayPoint)
-        Dim pWall = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-30, 0), New Point(-50, 200), New Point(50, 200), New Point(30, 0)}), {clMap.enState.Undefined})
+		Dim pNext = Translate(New Point(0, 0), nHeading, {New Point(0, nMaxSpeed)})(0)
+		pNext.Offset(pStart)
+		out.Add(New clWayPoint() With {.Point = pNext, .Heading = nHeading})
 
-        If pWall.X < Integer.MaxValue Then
-        Else
-            pWall = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-500, -500), New Point(-500, 500), New Point(500, 500), New Point(500, -500)}), {clMap.enState.Undefined})
-            nHeading = Heading(pStart, pWall)
-            WallPoint = pWall
-        End If
-        Dim pNext = Translate(New Point(0, 0), nHeading, {New Point(0, nMaxSpeed)})(0)
-        pNext.Offset(pStart)
-        out.Add(New clWayPoint() With {.Point = pNext, .Heading = nHeading})
-        Return out
-    End Function
+		Return out
+	End Function
 
-    Public Function FollowWall(pStart As Point, nHeading As Double) As IEnumerable(Of clWayPoint)
-        Dim out As New Generic.List(Of clWayPoint)
-        Static Mode As Integer = 0
+	Public Function FollowWall(pStart As Point, nHeading As Double) As Point
+		Static Mode As Integer = 0
         'Mode
         '0 Find Wall
         '1 Follow Wall
         Dim pCollision = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-30, 0), New Point(-50, 60), New Point(50, 60), New Point(30, 0)}), {clMap.enState.Fence, clMap.enState.Wall})
-        Dim pLeftWall = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-2000, 60), New Point(-2000, 100), New Point(0, 100), New Point(0, 60)}), {clMap.enState.Fence, clMap.enState.Wall})
-        WallPoint = pLeftWall
+		Dim pLeftWall = Map.FindNearestPoint(pStart, Translate(pStart, nHeading, {New Point(-2000, 60), New Point(-2000, 100), New Point(0, 100), New Point(0, 60)}), {clMap.enState.Fence, clMap.enState.Wall})
+		WallPoint = pLeftWall
 
-        Select Case Mode
-            Case 0 'drive to wall
+		Select Case Mode
+			Case 0 'drive to wall
                 If pCollision.X = Integer.MaxValue OrElse Distance(pCollision, pStart) > 200 Then
                     'drive straight to wall
-                    Dim pNext = Translate(pStart, nHeading, {New Point(0, nMaxSpeed)})(0)
-                    out.Add(New clWayPoint() With {.Point = pNext, .Heading = Heading(pStart, pNext)})
-                Else
+                    Return Translate(pStart, nHeading, {New Point(0, nMaxSpeed)})(0)
+				Else
                     'Turn right set mode 1
                     nHeading -= Math.PI / 2
-                    Dim pNext = Translate(pStart, nHeading, {New Point(0, 0)})(0)
-                    out.Add(New clWayPoint() With {.Point = pNext, .Heading = Heading(pStart, pNext)})
-                    Mode = 1
-                End If
+					Mode = 1
+					Return Translate(pStart, nHeading, {New Point(0, 0)})(0)
 
-            Case 1
-                If pCollision.X < Integer.MaxValue AndAlso Distance(pCollision, pStart) < 60 Then
+				End If
+
+			Case 1
+				If pCollision.X < Integer.MaxValue AndAlso Distance(pCollision, pStart) < 60 Then
                     '        MsgBox("collision")
                 End If
 
-                Dim nDistance = 60
-                Dim nWallDist = Distance(pStart, pLeftWall)
-                If nWallDist = Integer.MaxValue Then Mode = 0 : Return out
+				Dim nDistance = 60
+				Dim nWallDist = Distance(pStart, pLeftWall)
+				If nWallDist = Integer.MaxValue Then Mode = 0 : Return pStart
 
-                Dim nAngleWall = Heading(pStart, pLeftWall)
-                Dim nDriveHeading = nAngleWall - Math.PI / 2
-                If nWallDist < nDistance Then
-                    nDriveHeading -= 0.1
-                Else
-                    nDriveHeading += 0.1
-                End If
+				Dim nAngleWall = Heading(pStart, pLeftWall)
+				Dim nDriveHeading = nAngleWall - Math.PI / 2
+				If nWallDist < nDistance Then
+					nDriveHeading -= 0.1
+				Else
+					nDriveHeading += 0.1
+				End If
 
-                Dim pNext = Translate(pStart, nDriveHeading, {New Point(0, nMaxSpeed)})(0)
-                out.Add(New clWayPoint() With {.Point = pNext, .Heading = Heading(pStart, pNext)})
+				Return Translate(pStart, nDriveHeading, {New Point(0, nMaxSpeed)})(0)
 
-        End Select
-
+		End Select
 
 
-        Return out
-    End Function
 
-    Friend Function CalcPath(pRobot As Object, pDest As Object) As clPath
+	End Function
+
+	Friend Function CalcPath(pRobot As Object, pDest As Object) As clPath
         Dim out As New clPath
         Return out
     End Function
