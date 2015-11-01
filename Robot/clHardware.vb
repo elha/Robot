@@ -12,6 +12,7 @@ Public Class clHardware
 	Public Speed As Decimal = 0
 	Public Turn As Decimal = 0
 	Public BodySize As Point() = {New Point(-30, -5), New Point(-10, 30), New Point(10, 30), New Point(30, -5)}
+	Public TrackSize As Point() = {New Point(-30, -5), New Point(-30, 30), New Point(30, 30), New Point(30, -5)}
 	Dim oReader = New System.Threading.Thread(Sub()
 												  While True
 													  Try
